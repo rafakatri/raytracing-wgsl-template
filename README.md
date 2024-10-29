@@ -4,14 +4,7 @@ Template básico de um Ray Tracer em WGSL (WEBGPU). Tudo o que precisa para faze
 ### Instruções
 Faça um fork do projeto, clone e abra no Visual Studio (ou outro software, mas recomendo esse)
 
-Baixe (se no visual studio): 
-
-`Name: Live Server
-Id: ritwickdey.LiveServer
-Description: Launch a development local Server with live reload feature for static & dynamic pages
-Version: 5.7.9
-Publisher: Ritwick Dey
-VS Marketplace Link: https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer`
+Baixe (se no visual studio) -> **Name: Live Server - VS Marketplace Link:** [link para o marketplace](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer)
 
 Aperte ```CTRL + Shift + P``` e selecione ```Live Server```. Um browser com o projeto rodando deve abrir.
 
