@@ -389,7 +389,7 @@ async function Bunny()
     let spheres = [groundDefault];
     spheres = spheres.concat(getSpheresRandom(3, offset));
 
-    let { verticesMesh, trianglesMesh, triangles } = await loadMesh('stanford-bunny.obj');
+    let { verticesMesh, trianglesMesh, triangles } = await loadMesh('./media/stanford-bunny.obj');
     
     let meshes = [new Mesh([0, -1, -4], [2, 2, 2], [0, .2, 0], [0.4, 0.3, 0.6, 1.0], [1.0, 0.0, 0.5, 0.0], 0, 0, triangles.length)];
     let { min, max } = getObjBoundingBox(verticesMesh);
@@ -413,7 +413,7 @@ async function Bunny()
 
 async function Suzzanne()
 {
-    let { verticesMesh, trianglesMesh, triangles } = await loadMesh('suzanne.obj');
+    let { verticesMesh, trianglesMesh, triangles } = await loadMesh('./media/suzanne.obj');
     let meshes = [new Mesh([0, 0.0, -6], [2, 2, 2], [0, 0, 0], [0.6, 0.3, 0.7, 1.0], [0.0, 0.0, 0.0, 0.0], 0, 0, triangles.length)];
     let { min, max } = getObjBoundingBox(verticesMesh);
     meshes[0].setBoundingBox(min, max);
@@ -446,7 +446,7 @@ async function Everything()
                 new Box([0.0, 1.0, -2.6], [0.3, 0.3, 0.3], [-0.6, -0.2, -0.1], [0.3, 0.3, 0.3], [1.0, 0.0, 0.9, 0.0]),
     ];
 
-    let { verticesMesh, trianglesMesh, triangles } = await loadMesh('suzanne.obj');
+    let { verticesMesh, trianglesMesh, triangles } = await loadMesh('./media/suzanne.obj');
     let meshes = [new Mesh([0, -0.6, -2], [.25, .25, .25], [0.5, 0.3, 0.2], [0.6, 0.3, 0.7, 1.0], [1.0, 0.0, 0.7, 0.0], 0, 0, triangles.length)];
     let { min, max } = getObjBoundingBox(verticesMesh);
     meshes[0].setBoundingBox(min, max);
