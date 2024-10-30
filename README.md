@@ -22,7 +22,7 @@ Aperte ```CTRL + Shift + P``` e selecione ```Live Server```. Um browser com o pr
 Você pode controlar qualquer parametro com o GUI ao lado.
 
 **Dica**: Você pode clicar no parametro e fazer um scroll para mudar ele de maneira smooth.
-Para mover a camera, use WASDQE. Para rodar, use as setas.
+Para mover a camera, use WASDQEXZ. Para rodar, use as setas.
 
 ### Dicas
 Procure pelos comentários no código para te ajudar. Dê uma olhada nos outros arquivos ```.wgsl``` além do ```raytracer.wgsl```, várias funções que você vai precisar já estão disponíveis lá, prontas para usar.
