@@ -35,7 +35,7 @@ You can compute your grade based on the scenes you managed to render. You can al
 - B: ```"Cubes", "Cornell", "Mirror", "Infinite"```
 - B+: ```"Bunny", "Suzanne"``` e Crie uma cena nova
 - A: Adicione uma nova primitiva geometrica
-- A+: ```"Everything"```
+- A+: ```"Rotation", "Everything"```
 
 ### Entrega:
 Via Blackboard, entregue o link do git.

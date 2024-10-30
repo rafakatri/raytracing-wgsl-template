@@ -275,7 +275,7 @@ async function Cornell()
 
 		new Quad([1, -1, 0, 0], [-2, 0, 0, 0], [0, 2, 0, 0], [0, 0, 1, 1], [0, 0, 0, 0]), 
 
-		new Quad([-0.5, 0.99, -1.5, 0], [1, 0, 0, 0], [0, 0, 1, 0], [1, 1, 1, 1], [0, 0, 0, 100]), 
+		new Quad([-0.5, 0.99, -1.5, 0], [1, 0, 0, 0], [0, 0, 1, 0], [1, 1, 1, 1], [0, 0, 0, 5]), 
 	];
 
 	let boxes = [
@@ -319,7 +319,7 @@ async function Mirror()
 
 		new Quad([1, -1, 0, 0], [-2, 0, 0, 0], [0, 2, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0]), 
 
-		new Quad([-0.5, 0.99, -1.5, 0], [1, 0, 0, 0], [0, 0, 1, 0], [1, 1, 1, 1], [0, 0, 0, 5]), 
+		new Quad([-0.5, 0.99, -1.5, 0], [1, 0, 0, 0], [0, 0, 1, 0], [1, 1, 1, 1], [0, 0, 0, 2]), 
 	];
 
 	let boxes = [
@@ -432,6 +432,45 @@ async function Suzzanne()
         samplesPerPixel: 1.0,
         maxBounces: 10.0
     };
+}
+
+async function Rotation() 
+{
+	let spheres = [
+		new Sphere([0, -1001, 0], [0.5, 0.5, 0.5], 1000, [0.9, 0, 0.6, 0]), 
+		new Sphere([0, -0.58, -2.34], [0.8, 0.1, 0.2], 0.4, [0, 0.001, 0, 0]), 
+		new Sphere([0.54, -0.81, -1.8], [0.4, 0.9, 0.8], 0.19, [0, 0, 0, 3]), 
+	];
+
+	let quads = [
+	];
+
+	let boxes = [
+		new Box([-1.37, 0.6, -2.68, 0], [0.2784313725490196, 0.8784313725490196, 1], [-0.46, 5.32, 0.23, 0], [0.89, 1.41, 0.15, 0], [1, 0, 0.9, 0]), 
+		new Box([0.49, 0.07, -2.04, 0], [0.1803921568627451, 0.4549019607843137, 1], [-0.56, -0.42, 0.31, 0], [0.2, 0.2, 0.2, 0], [0, 0, 0, 0]), 
+		new Box([1.21, -0.36, -1.74, 0], [1, 1, 1], [-1.21, -3.65, -1.76, 0], [0.3, 0.3, 0.3, 0], [1, 0.03, 1, 0]), 
+		new Box([1.13, -0.71, -1.17, 0], [0.30196078431372547, 1, 0.6392156862745098], [1.13, -0.73, 0, 0], [0.81, 0.01, 0.94, 0], [1, 0.01, 0.8, 0]), 
+	];
+
+	let { verticesMesh, trianglesMesh, triangles } = await loadMesh('./media/stanford-bunny.obj');
+    let meshes = [new Mesh([-0.69, -1, -1.77], [.4, .4, .4], [0, -.75, 0], [0.4, 0.7, 0.6, 1.0], [1.0, 0.0, 0.5, 0.0], 0, 0, triangles.length)];
+    let { min, max } = getObjBoundingBox(verticesMesh);
+    meshes[0].setBoundingBox(min, max);
+
+	return {
+		spheres : spheres,
+		quads : quads,
+		boxes : boxes,
+		triangles: triangles,
+		meshes: meshes,
+		backgroundColor1 : [1, 1, 1],
+		backgroundColor2 : [0.06274509803921569, 0.0784313725490196, 0.19607843137254902],
+		focusDistance: 3,
+		focusAngle: 0,
+		sunIntensity: 1,
+		samplesPerPixel: 1,
+		maxBounces: 10
+	};
 }
 
 async function Everything()
