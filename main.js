@@ -132,6 +132,8 @@ let scenesFolder = gui.addFolder("Scene");
 const scenesNames = { name: "Spheres"};
 
 scenesFolder.add(scenesNames, 'name', availableScenes).name("Scene").listen().onChange( function() { getScene(scenesNames.name); });
+var cameraVelocityConstant = 10.0;
+scenesFolder.add({ CameraVelocity: cameraVelocityConstant }, 'CameraVelocity').name("Camera Velocity").step(0.01).listen().onChange( function() { cameraVelocityConstant = this.object.CameraVelocity; });
 
 scenesFolder.add({ NewScene: () => {
     spheres = [new Sphere([0, -1001, 0], [0.5, 0.5, 0.5], 1000, [0.9, 0.0, 0.6, 0.0]), new Sphere([0.0, 0.3, -5], [0.8, 0.1, 0.2], 1.3, [0.0, 0.001, 0.0, 0.0])];
@@ -345,38 +347,41 @@ gui.onChange( event => { handleAccumulate(false); writeBuffers();});
 
 document.addEventListener("keydown", checkUserInput);
 document.addEventListener("keyup", checkUserInput);
+
+window.addEventListener("keydown", function(e) {
+    if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].indexOf(e.code) > -1) {
+        e.preventDefault();
+    }
+}, false);
+
 let rotQuat = quat.create();
 
 function checkUserInput(event)
 {
     let isKeyUp = event.type == "keyup";
+    var velocity = cameraVelocityConstant;
 
-    var translationAxis = [
-        event.key == "a" ? -1 : event.key == "d" ? 1 : 0,
-        event.key == "q" ? -1 : event.key == "e" ? 1 : 0,
-        event.key == "w" ? -1 : event.key == "s" ? 1 : 0
-    ];
-    
-    var rotationAxis = [
-        event.key == "ArrowLeft" ? -1 : event.key == "ArrowRight" ? 1 : 0,
-        event.key == "ArrowDown" ? -1 : event.key == "ArrowUp" ? 1 : 0,
-        event.key == "z" ? -1 : event.key == "x" ? 1 : translationAxis[2]
-    ];
-    
-    var velocity = 10.0;
-    cameraVelocity = [translationAxis[0] * velocity, translationAxis[1] * velocity, translationAxis[2] * velocity];
-    cameraRotationVelocity = [rotationAxis[0] * velocity, rotationAxis[1] * velocity, rotationAxis[2] * velocity];
+    var setVel = (axis, event, value, originalVal) => {
+        if (event.key == axis)
+        {
+            return isKeyUp ? 0.0 : value;
+        }
 
-    if (isKeyUp)
-    {
-        cameraVelocity[0] = 0.0;
-        cameraVelocity[1] = 0.0;
-        cameraVelocity[2] = 0.0;
-
-        cameraRotationVelocity[0] = 0.0;
-        cameraRotationVelocity[1] = 0.0;
-        cameraRotationVelocity[2] = 0.0;
+        return originalVal;
     }
+
+    cameraVelocity[0] = setVel("a", event, -velocity, cameraVelocity[0]);
+    cameraVelocity[0] = setVel("d", event, velocity, cameraVelocity[0]);
+    cameraVelocity[1] = setVel("q", event, -velocity, cameraVelocity[1]);
+    cameraVelocity[1] = setVel("e", event, velocity, cameraVelocity[1]);
+    cameraVelocity[2] = setVel("w", event, -velocity, cameraVelocity[2]);
+    cameraVelocity[2] = setVel("s", event, velocity, cameraVelocity[2]);
+    cameraRotationVelocity[2] = setVel("z", event, -velocity, cameraRotationVelocity[2]);
+    cameraRotationVelocity[2] = setVel("x", event, velocity, cameraRotationVelocity[2]);
+    cameraRotationVelocity[0] = setVel("ArrowLeft", event, -velocity, cameraRotationVelocity[0]);
+    cameraRotationVelocity[0] = setVel("ArrowRight", event, velocity, cameraRotationVelocity[0]);
+    cameraRotationVelocity[1] = setVel("ArrowDown", event, -velocity, cameraRotationVelocity[1]);
+    cameraRotationVelocity[1] = setVel("ArrowUp", event, velocity, cameraRotationVelocity[1]);
 
     handleAccumulate(isKeyUp, false);
 }
