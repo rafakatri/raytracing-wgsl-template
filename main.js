@@ -132,7 +132,7 @@ let scenesFolder = gui.addFolder("Scene");
 const scenesNames = { name: "Spheres"};
 
 scenesFolder.add(scenesNames, 'name', availableScenes).name("Scene").listen().onChange( function() { getScene(scenesNames.name); });
-var cameraVelocityConstant = 10.0;
+var cameraVelocityConstant = 5.0;
 scenesFolder.add({ CameraVelocity: cameraVelocityConstant }, 'CameraVelocity').name("Camera Velocity").step(0.01).listen().onChange( function() { cameraVelocityConstant = this.object.CameraVelocity; });
 
 scenesFolder.add({ NewScene: () => {
@@ -383,7 +383,8 @@ function checkUserInput(event)
     cameraRotationVelocity[1] = setVel("ArrowDown", event, -velocity, cameraRotationVelocity[1]);
     cameraRotationVelocity[1] = setVel("ArrowUp", event, velocity, cameraRotationVelocity[1]);
 
-    handleAccumulate(isKeyUp, false);
+    var sumMag = Math.abs(cameraVelocity[0]) + Math.abs(cameraVelocity[1]) + Math.abs(cameraVelocity[2]) + Math.abs(cameraRotationVelocity[0]) + Math.abs(cameraRotationVelocity[1]) + Math.abs(cameraRotationVelocity[2]);
+    handleAccumulate(sumMag < 0.01, false);
 }
 
 function generateBackgroundColor(rgb1, rgb2)
@@ -567,7 +568,6 @@ function moveCamera(deltaTime)
     mat4.targetTo(rotMatrix, [uniforms.camerax, uniforms.cameray, uniforms.cameraz], [uniforms.lookatx, uniforms.lookaty, uniforms.lookatz], [0, 1, 0]);
     mat4.getRotation(rotQuat, rotMatrix);
 }
-
 
 // update and render
 async function update()
