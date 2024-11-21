@@ -134,7 +134,7 @@ fn get_camera(lookfrom: vec3f, lookat: vec3f, vup: vec3f, vfov: f32, aspect_rati
   return camera;
 }
 
-fn envoriment_color(direction: vec3f, color1: vec3f, color2: vec3f) -> vec3f
+fn environment_color(direction: vec3f, color1: vec3f, color2: vec3f) -> vec3f
 {
   var unit_direction = normalize(direction);
   var t = 0.5 * (unit_direction.y + 1.0);
@@ -162,27 +162,86 @@ fn check_ray_collision(r: ray, max: f32) -> hit_record
   var record = hit_record(RAY_TMAX, vec3f(0.0), vec3f(0.0), vec4f(0.0), vec4f(0.0), false, false);
   var closest = record;
 
+  for (var i = 0; i < spheresCount; i++)
+  {
+    var sphere = spheresb[i];
+    var c = vec3(sphere.transform.x, sphere.transform.y, sphere.transform.z);
+    var radius = sphere.transform.w;
+
+    hit_sphere(c, radius, r, &record, RAY_TMAX);
+    
+    if(record.hit_anything && record.t < closest.t) {
+      record.object_color = sphere.color;
+      record.object_material = sphere.material;
+      closest = record;
+    }
+  }
+
+  for (var i = 0; i < quadsCount; i++)
+  {
+    var quad = quadsb[i];
+    hit_quad(r, quad.Q, quad.u, quad.v, &record, RAY_TMAX);
+    
+    if(record.hit_anything && record.t < closest.t) {
+      record.object_color = quad.color;
+      record.object_material = quad.material;
+      closest = record;
+    }
+  }
+
+  for (var i = 0; i < boxesCount; i++)
+  {
+    var box = boxesb[i];
+    hit_box(r, vec3f(box.center.xyz), vec3f(box.radius.xyz), &record, RAY_TMAX);
+    
+    if(record.hit_anything && record.t < closest.t) {
+      record.object_color = box.color;
+      record.object_material = box.material;
+      closest = record;
+    }
+  }
+
   return closest;
 }
 
 fn lambertian(normal : vec3f, absorption: f32, random_sphere: vec3f, rng_state: ptr<function, u32>) -> material_behaviour
 {
-  return material_behaviour(true, vec3f(0.0));
+  var dir = normal + rng_next_vec3_in_unit_sphere(rng_state);
+
+  if (length(dir) < 0.001) {
+    dir = normal;
+  }
+
+  return material_behaviour(true, normalize(dir));
 }
 
 fn metal(normal : vec3f, direction: vec3f, fuzz: f32, random_sphere: vec3f) -> material_behaviour
 {
-  return material_behaviour(false, vec3f(0.0));
+  var dir = reflect(direction, normal) + fuzz * random_sphere;
+  return material_behaviour(false, normalize(dir));
 }
 
 fn dielectric(normal : vec3f, r_direction: vec3f, refraction_index: f32, frontface: bool, random_sphere: vec3f, fuzz: f32, rng_state: ptr<function, u32>) -> material_behaviour
 {  
-  return material_behaviour(false, vec3f(0.0));
+  if (rng_next_float(rng_state) > 0.5)
+  {
+    var dir = reflect(r_direction, normal) + fuzz * random_sphere;
+    return material_behaviour(false, normalize(dir));
+    //var r0 = pow(((1-refraction_index)/(1+refraction_index)), 2);
+    //var cos = dot(r_direction, normal);
+    //var r = r0 + (1 - r0) * pow((1 - cos), 5);
+    //var dir = r + fuzz * random_sphere;
+    //return material_behaviour(false, normalize(dir));
+  }
+  var n = select(refraction_index, 1.0 / refraction_index, frontface);
+  var r_perp = n * (r_direction + (dot(-r_direction, normal) * normal));
+  var r_par = -sqrt(1-dot(r_perp, r_perp)) * normal;
+  return material_behaviour(false, normalize(r_perp+r_par));
 }
 
 fn emmisive(color: vec3f, light: f32) -> material_behaviour
 {
-  return material_behaviour(false, vec3f(0.0));
+  return material_behaviour(false, color * light);
 }
 
 fn trace(r: ray, rng_state: ptr<function, u32>) -> vec3f
@@ -198,6 +257,45 @@ fn trace(r: ray, rng_state: ptr<function, u32>) -> vec3f
 
   for (var j = 0; j < maxbounces; j = j + 1)
   {
+    var record = check_ray_collision(r_, RAY_TMAX);
+
+    if (!record.hit_anything) 
+    {
+      light += color * environment_color(r_.direction, backgroundcolor1, backgroundcolor2);
+      break;
+    }
+
+    var lambertian_component = lambertian(record.normal, record.object_material.y, rng_next_vec3_in_unit_sphere(rng_state), rng_state);
+
+    var metal_component = metal(record.normal, r_.direction, record.object_material.y, rng_next_vec3_in_unit_sphere(rng_state));
+
+    var random = rng_next_float(rng_state);
+
+    if (record.object_material.w > 0.0) 
+    {
+      var emmisive_component = emmisive(record.object_color.xyz, record.object_material.w);
+      light += color * emmisive_component.direction;
+      break;
+    }
+
+    if (record.object_material.x >= 0)
+    {
+      if (record.object_material.z > random) 
+      {
+        behaviour = metal_component;
+      }
+      else 
+      {
+        behaviour = lambertian_component;
+      }
+    }
+    else
+    {
+      var dielectric_component = dielectric(record.normal, r_.direction, record.object_material.z, record.frontface, rng_next_vec3_in_unit_sphere(rng_state), record.object_material.y, rng_state);
+      behaviour = material_behaviour(false, dielectric_component.direction);
+    }
+    r_ = ray(record.p, normalize(behaviour.direction));
+    color *= record.object_color.xyz;         
 
   }
 
@@ -225,14 +323,21 @@ fn render(@builtin(global_invocation_id) id : vec3u)
     var cam = get_camera(lookfrom, lookat, vec3(0.0, 1.0, 0.0), uniforms[10], 1.0, uniforms[6], uniforms[5]);
     var samples_per_pixel = i32(uniforms[4]);
 
-    var color = vec3(rng_next_float(&rng_state), rng_next_float(&rng_state), rng_next_float(&rng_state));
-
     // Steps:
     // 1. Loop for each sample per pixel
     // 2. Get ray
     // 3. Call trace function
     // 4. Average the color
 
+    var color = vec3f(0.0);
+    for (var i = 0; i < samples_per_pixel; i++) 
+    {
+      var ray = get_ray(cam, uv, &rng_state);
+      color += trace(ray, &rng_state);
+    }
+
+    color /= f32(samples_per_pixel);
+    
     var color_out = vec4(linear_to_gamma(color), 1.0);
     var map_fb = mapfb(id.xy, rez);
     
@@ -240,6 +345,6 @@ fn render(@builtin(global_invocation_id) id : vec3u)
     var should_accumulate = uniforms[3];
 
     // Set the color to the framebuffer
-    rtfb[map_fb] = color_out;
-    fb[map_fb] = color_out;
+    rtfb[map_fb] = rtfb[map_fb] * should_accumulate + color_out;
+    fb[map_fb] = rtfb[map_fb] / rtfb[map_fb].w;
 }
